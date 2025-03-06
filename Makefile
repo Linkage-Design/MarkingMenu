@@ -15,10 +15,10 @@
 #
 ################################################################################
 #
-#   Copyright (C) 2025 Jayme Wilkinson
+#   Copyright (C) 2025 Linkage Design
 #
 #   The software as information contained herein are propietary to, and
-#   comprise valuable trade secrets of Jayme Wilkinson, whom intends
+#   comprise valuable trade secrets of Linkage Design, whom intends
 #   to preseve as trade secrets such software and information. This sofware
 #   and information or any copies thereof may not be provided or otherwise
 #   made available to any other person or organization.
@@ -90,23 +90,24 @@ COPY 				= if test -f $(1); then 									\
 				      	  printf '\e[33m%20s\e[0m $(1)\n' "Copying";			\
 					      cp -r $(1) $(2);										\
 				  	  fi
-DELETE 				= if test -f $(1); then 									\
+DELETE 				= if test -d $(1); then 									\
 				          printf '\e[31m%20s\e[0m $(1)\n' "Deleting";			\
 					      rm -rf $(1);											\
 				      fi
 BUILD_MANIFEST		= printf '\e[33m%20s\e[0m $(1)\n' "Creating Manifest";		\
-				  	  printf 'schema_version = $(BL_SCHEMA_VERSION)\n' > $(1);	\
-				  	  printf 'id = $(BL_ID)\n' >> $(1);							\
-				  	  printf 'name = $(BL_NAME)\n' >> $(1);						\
-				  	  printf 'version = "$(BL_VERSION)"\n' >> $(1);				\
-				  	  printf 'tagline = $(BL_TAGLINE)\n' >> $(1);				\
-					  printf 'maintainer = $(BL_MAINTAINER)\n' >> $(1);			\
-				  	  printf 'type = $(BL_TYPE)\n' >> $(1);						\
-				  	  printf 'tags = $(BL_TAGS)\n' >> $(1);						\
-				  	  printf 'version_min = $(BL_VERSION_MIN)\n' >> $(1);		\
-				  	  printf 'license = $(BL_LICENSE)\n' >> $(1);				\
-				  	  printf 'website = $(BL_WEBSITE)\n' >> $(1);				\
-				  	  printf 'copyright = $(BL_COPYRIGHT)\n' >> $(1)
+				  	  printf 'schema_version = $(BL_SCHEMA_VERSION)				\
+				  	  \nid = $(BL_ID)		      		                        \
+					  \nname = $(BL_NAME)										\
+				  	  \nversion = "$(BL_VERSION)"								\
+				  	  \ntagline = $(BL_TAGLINE)									\
+					  \nmaintainer = $(BL_MAINTAINER)							\
+				  	  \ntype = $(BL_TYPE)										\
+				  	  \ntags = $(BL_TAGS)										\
+				  	  \nblender_version_min = $(BL_VERSION_MIN)					\
+				  	  \nlicense = $(BL_LICENSE)									\
+				  	  \nwebsite = $(BL_WEBSITE)									\
+				  	  \ncopyright = $(BL_COPYRIGHT)' > $(1)
+
 INFO 				= printf "\e[33m%20s\e[0m %s\n" $(1) $(2);
 LABEL 				= printf "\e[36m%20s\e[0m\n" $(1);
 LINE				= printf "\e[37m%0.s-\e[0m" {1..80}; printf "\n";
@@ -146,7 +147,7 @@ clobber: BANNER
 	@$(call LABEL,"Clobber Target Finished...")
 
 #  Test Targets
-test: BANNER
+test: default dist BANNER
 	@$(call LABEL,"Installing local version of $(PROJECT)...")
 	@$(call DELETE,$(TEST_LOCATION)/$(PROJECT))
 	@unzip -q $(DIST_LOCATION)/$(PROJECT)-$(VERSION).zip -d $(TEST_LOCATION)/$(PROJECT)
