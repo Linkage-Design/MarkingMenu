@@ -6,8 +6,8 @@ from bpy.props import StringProperty, EnumProperty
 bl_info = {
     "name": "Linkage Marking Menu",
     "author": "Linkage Design",
-    "version": (0, 5),
-    "blender": (4, 2, 0),
+    "version": (1, 0, 1),
+    "blender": (4, 3, 0),
     "description": "Customizable marking menu for Object and Edit modes",
     "category": "Interface",
 }
@@ -26,7 +26,7 @@ COMMON_OBJECT_OPERATORS = COMMON_OBJECT2_OPERATORS = [
     ("object.origin_set(type='ORIGIN_GEOMETRY')", "Set Origin to Geometry", "Set origin to center of geometry"),
     ("object.convert(target='MESH')", "Convert to Mesh", "Convert selected objects to mesh"),
     ("object.modifier_add(type='SUBSURF')", "Add Subdivision Surface", "Add subdivision surface modifier"),
-    ("object.modifier_add", "Add Modifier Menu", "Open the Add Modifier menu"),    
+    ("object.modifier_add", "Add Modifier Menu", "Open the Add Modifier menu"),
     ("wm.call_menu(name='VIEW3D_MT_object_apply')", "Apply Menu", "Open the Apply menu"),
     ("wm.call_menu_pie(name='VIEW3D_MT_pivot_pie')", "Origin Pie Menu", "Open the origin/pivot pie menu"),
     ("Custom", "Custom Operator", "Use a custom operator"),
@@ -56,17 +56,17 @@ COMMON_EDIT_OPERATORS = [
 class PIE_MT_CustomizableSelectionsBase(Menu):
     #PIE_POSITIONS = [3, 5, 1, 7, 2, 6, 0, 4]
     PIE_POSITIONS = [6, 2, 4, 0, 7, 1, 5, 3]
-    
+
     def draw(self, context):
         layout = self.layout
         pie = layout.menu_pie()
-        
+
         preferences = context.preferences.addons[__name__].preferences
-        
+
         for i in self.PIE_POSITIONS:
             op_name = getattr(preferences, f"{self.mode}_pie_item_{i}")
             custom_op = getattr(preferences, f"{self.mode}_custom_op_{i}")
-            
+
             if op_name == "Custom":
                 if custom_op:
                     self.draw_custom_operator(pie, custom_op, i)
@@ -82,7 +82,7 @@ class PIE_MT_CustomizableSelectionsBase(Menu):
         print("---------------")
         print(self.common_operators)
         text = next((item[1] for item in self.common_operators if item[0] == op_string), op_string)
-        
+
         if hasattr(bpy.ops, op_name.split('.')[0]):
             op = pie.operator(op_name, text=text)
             for key, value in op_args.items():
@@ -97,7 +97,7 @@ class PIE_MT_CustomizableSelectionsBase(Menu):
     def draw_custom_operator(self, pie, op_string, index):
         op_name, op_args = self.parse_operator_string(op_string)
         text = op_name.split(".")[-1].replace("_", " ").title()
-        
+
         if hasattr(bpy.ops, op_name.split('.')[0]):
             op = pie.operator(op_name, text=text)
             for key, value in op_args.items():
@@ -126,7 +126,7 @@ class PIE_MT_CustomizableSelectionsObject(PIE_MT_CustomizableSelectionsBase):
     bl_label = "Linkage Marking Menu (Object Mode)"
     mode = "object"
     common_operators = COMMON_OBJECT_OPERATORS
-    
+
 class PIE_MT_CustomizableSelectionsObject2(PIE_MT_CustomizableSelectionsBase):
     bl_idname = "PIE_MT_customizable_selections_object_2"
     bl_label = "Linkage Marking Menu (Object Mode 2)"
@@ -142,22 +142,22 @@ class PIE_MT_CustomizableSelectionsEdit(PIE_MT_CustomizableSelectionsBase):
 class PIE_OT_CallCustomizablePieMenu(Operator):
     bl_idname = "pie.call_customizable_pie_menu"
     bl_label = "Call Customizable Pie Menu"
-    
+
     def execute(self, context):
         if context.mode == 'OBJECT':
             bpy.ops.wm.call_menu_pie(name="PIE_MT_customizable_selections_object")
         elif context.mode == 'EDIT_MESH':
             bpy.ops.wm.call_menu_pie(name="PIE_MT_customizable_selections_edit")
         return {'FINISHED'}
-    
+
 class PIE_OT_CallCustomizablePieMenu2(Operator):
     bl_idname = "pie.call_customizable_pie_menu_2"
     bl_label = "Call Customizable Pie Menu 2"
-    
+
     def execute(self, context):
         if context.mode == 'OBJECT':
             bpy.ops.wm.call_menu_pie(name="PIE_MT_customizable_selections_object_2")
-        return {'FINISHED'}    
+        return {'FINISHED'}
 
 def get_all_operators(self, context):
     items = []
@@ -212,14 +212,17 @@ class PIE_AddonPreferences(AddonPreferences):
         "wm.call_menu(name='VIEW3D_MT_edit_mesh_faces')"
     ]
 
+    #   TODO: Need to remove any use of exec() in the code below
+
     for mode, defaults in [('object', object_defaults), ('object2', object_defaults), ('edit', edit_defaults)]:
         for i in range(8):
+            print(f"{mode}_pie_item_{i}: EnumProperty(name=f'{mode.capitalize()} Pie Item {i+1}', items=COMMON_{mode.upper()}_OPERATORS, default=defaults[i])")
             exec(f"{mode}_pie_item_{i}: EnumProperty(name=f'{mode.capitalize()} Pie Item {i+1}', items=COMMON_{mode.upper()}_OPERATORS, default=defaults[i])")
             exec(f"{mode}_custom_op_{i}: StringProperty(name=f'{mode.capitalize()} Custom Operator {i+1}')")
 
     def draw(self, context):
         layout = self.layout
-        
+
         for mode in ['object', 'object2', 'edit']:
             box = layout.box()
             box.label(text=f"{mode.capitalize()} Mode Pie Menu")
@@ -234,7 +237,7 @@ class PIE_AddonPreferences(AddonPreferences):
 
 classes = (
     PIE_MT_CustomizableSelectionsObject,
-    PIE_MT_CustomizableSelectionsObject2,    
+    PIE_MT_CustomizableSelectionsObject2,
     PIE_MT_CustomizableSelectionsEdit,
     PIE_OT_CallCustomizablePieMenu,
     PIE_OT_CallCustomizablePieMenu2,
@@ -251,9 +254,9 @@ def register():
     wm = bpy.context.window_manager
     km = wm.keyconfigs.addon.keymaps.new(name='Object Mode')
     kmi = km.keymap_items.new('pie.call_customizable_pie_menu', 'LEFTMOUSE', 'PRESS', shift=True, ctrl=True)
-    kmi = km.keymap_items.new('pie.call_customizable_pie_menu_2', 'RIGHTMOUSE', 'PRESS', shift=True, ctrl=True)    
+    kmi = km.keymap_items.new('pie.call_customizable_pie_menu_2', 'RIGHTMOUSE', 'PRESS', shift=True, ctrl=True)
     addon_keymaps.append((km, kmi))
-    
+
     km = wm.keyconfigs.addon.keymaps.new(name='Mesh')
     kmi = km.keymap_items.new('pie.call_customizable_pie_menu', 'LEFTMOUSE', 'PRESS', shift=True, ctrl=True)
     addon_keymaps.append((km, kmi))
