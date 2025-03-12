@@ -90,7 +90,7 @@ COPY 				= if test -f $(1); then 									\
 				      	  printf '\e[33m%20s\e[0m $(1)\n' "Copying";			\
 					      cp -r $(1) $(2);										\
 				  	  fi
-DELETE 				= if test -d $(1); then 									\
+DELETE 				= if test -e $(1); then 									\
 				          printf '\e[31m%20s\e[0m $(1)\n' "Deleting";			\
 					      rm -rf $(1);											\
 				      fi
@@ -106,11 +106,16 @@ BUILD_MANIFEST		= printf '\e[33m%20s\e[0m $(1)\n' "Creating Manifest";		\
 				  	  \nblender_version_min = $(BL_VERSION_MIN)					\
 				  	  \nlicense = $(BL_LICENSE)									\
 				  	  \nwebsite = $(BL_WEBSITE)									\
-				  	  \ncopyright = $(BL_COPYRIGHT)' > $(1)
+				  	  \ncopyright = $(BL_COPYRIGHT)' > $(1);
+INFO 				= printf '\e[33m%20s\e[0m %s\n' $(1) $(2);
+LABEL 				= printf '\e[36m%20s\e[0m\n' $(1);
+LINE				= printf '\e[37m%0.s-\e[0m' {1..80}; 						\
+					  printf '\n';
+PACKAGE 			= printf '\e[33m%20s\e[0m $(1)\n' "Packaging"; 				\
+					  $(foreach FILE, $(2), 									\
+					  	  printf '%20s $(notdir $(FILE))\n';					\
+						  zip -jq $(DIST_LOCATION)/$(1) $(FILE);				)
 
-INFO 				= printf "\e[33m%20s\e[0m %s\n" $(1) $(2);
-LABEL 				= printf "\e[36m%20s\e[0m\n" $(1);
-LINE				= printf "\e[37m%0.s-\e[0m" {1..80}; printf "\n";
 
 ################################################################################
 #
@@ -120,18 +125,19 @@ LINE				= printf "\e[37m%0.s-\e[0m" {1..80}; printf "\n";
 default: BANNER
 	@$(call LABEL,"Starting Default Target...")
 	@$(call CHKDIR,$(BUILD_LOCATION))
+	@$(call COPY,$(LICENSE_FILE),$(BUILD_LOCATION))
 	@$(foreach FILE,$(SOURCE_FILES),											\
 		$(call COPY,$(FILE),$(BUILD_LOCATION));									)
 	@$(call BUILD_MANIFEST,$(BUILD_LOCATION)/$(BL_MANIFEST_FILE))
-	@$(call COPY,$(LICENSE_FILE),$(BUILD_LOCATION))
 	@$(call LABEL,"Finished Default Target...")
+
 
 dist: BANNER
 	@$(call LABEL,"Starting Distribution Target....")
 	@$(call CHKDIR,$(DIST_LOCATION))
-	@$(call INFO,Creating Distribution $(PROJECT)-$(VERSION).zip Package...)
-	@zip -j $(DIST_LOCATION)/$(PROJECT)-$(VERSION).zip $(wildcard $(BUILD_LOCATION)/*)
+	@$(call PACKAGE,$(PROJECT)-$(VERSION).zip,$(wildcard $(BUILD_LOCATION)/*))
 	@$(call LABEL,"Distribution Target Finished...")
+
 
 #  Clean Targets
 clean: BANNER
@@ -140,11 +146,13 @@ clean: BANNER
 		$(call DELETE,$(BUILD_LOCATION)/$(ITEM));								)
 	@$(call LABEL,"Clean Target Finished...")
 
+
 clobber: BANNER
 	@$(call LABEL,"Starting Clobber Target...")
 	@$(call DELETE,$(BUILD_LOCATION))
 	@$(call DELETE,$(DIST_LOCATION))
 	@$(call LABEL,"Clobber Target Finished...")
+
 
 #  Test Targets
 test: default dist BANNER
@@ -153,6 +161,7 @@ test: default dist BANNER
 	@unzip -q $(DIST_LOCATION)/$(PROJECT)-$(VERSION).zip -d $(TEST_LOCATION)/$(PROJECT)
 	@$(call LABEL,"Launching Blender...")
 	@blender
+
 
 #	Informational Targets
 BANNER:

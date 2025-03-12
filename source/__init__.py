@@ -1,18 +1,42 @@
-import bpy
-import copy
-from bpy.types import Menu, Operator, AddonPreferences
-from bpy.props import StringProperty, EnumProperty
+################################################################################
+#
+#   __init__.py
+#
+################################################################################
+#
+#   DESCRIPTION
+#       This is the entry point for the Linkeage Design Marking Menus Blender
+#       Add-on.
+#
+#   AUTHOR
+#       Josh Kirkpatrick
+#       Jayme Wilkinson
+#
+#   HISTORY
+#       Oct 2025 Initial Version
+#
+################################################################################
+#
+#   Copyright (C) 2024 Linkage Design
+#
+#   The software and information contained herein are proprietary to, and
+#   comprise valuable trade secrets of Linkage Design, which intends to
+#   preserve as trade secrets such software and information. This software
+#   and information or any other copies thereof may not be provided or
+#   otherwise made available to any other person or organization.
+#
+################################################################################
+import  bpy
+import  copy
 
-bl_info = {
-    "name": "Linkage Marking Menu",
-    "author": "Linkage Design",
-    "version": (1, 0, 1),
-    "blender": (4, 3, 0),
-    "description": "Customizable marking menu for Object and Edit modes",
-    "category": "Interface",
-}
 
-COMMON_OBJECT_OPERATORS = COMMON_OBJECT2_OPERATORS = [
+###############################################################################
+#
+#   Define Default Marking Menu Values
+#
+###############################################################################
+#   Default object mode operators
+COMMON_OBJECT_OPERATORS = [
     ("object.select_all(action='TOGGLE')", "Select All (Toggle)", "Toggle selection of all objects"),
     ("object.select_all(action='DESELECT')", "Deselect All", "Deselect all objects"),
     ("object.select_random", "Select Random", "Randomly select objects"),
@@ -32,8 +56,10 @@ COMMON_OBJECT_OPERATORS = COMMON_OBJECT2_OPERATORS = [
     ("Custom", "Custom Operator", "Use a custom operator"),
 ]
 
-#COMMON_OBJECT2_OPERATORS = COMMON_OBJECT_OPERATORS.copy()
+#   Default Object2 marking Menu Operators (Initially the same as OBJECT Operators)
+COMMON_OBJECT2_OPERATORS = COMMON_OBJECT_OPERATORS
 
+#    Default edit mode operators
 COMMON_EDIT_OPERATORS = [
     ("mesh.select_all(action='TOGGLE')", "Select All (Toggle)", "Toggle selection of all elements"),
     ("mesh.select_all(action='DESELECT')", "Deselect All", "Deselect all elements"),
@@ -53,15 +79,90 @@ COMMON_EDIT_OPERATORS = [
     ("Custom", "Custom Operator", "Use a custom operator"),
 ]
 
-class PIE_MT_CustomizableSelectionsBase(Menu):
-    #PIE_POSITIONS = [3, 5, 1, 7, 2, 6, 0, 4]
+#   Define a variable to store and process this addon's keymaps.
+addon_keymaps = []
+
+#   Default Preference Propertiess
+defaults = {
+    "object": [
+        "object.select_all(action='TOGGLE')",
+        "object.delete",
+        "object.duplicate_move",
+        "object.shade_smooth",
+        "object.join",
+        "object.convert(target='MESH')",
+        "object.origin_set(type='ORIGIN_GEOMETRY')",
+        "wm.call_menu(name='VIEW3D_MT_object_apply')"
+    ],
+    "object2": [
+        "object.select_all(action='TOGGLE')",
+        "object.delete",
+        "object.duplicate_move",
+        "object.shade_smooth",
+        "object.join",
+        "object.convert(target='MESH')",
+        "object.origin_set(type='ORIGIN_GEOMETRY')",
+        "wm.call_menu(name='VIEW3D_MT_object_apply')"
+    ],
+    "edit": [
+        "mesh.select_all(action='TOGGLE')",
+        "mesh.delete",
+        "mesh.duplicate_move",
+        "mesh.extrude_region_move",
+        "mesh.subdivide",
+        "mesh.separate(type='SELECTED')",
+        "mesh.faces_shade_smooth",
+        "wm.call_menu(name='VIEW3D_MT_edit_mesh_faces')"
+    ]
+}
+
+
+###############################################################################
+#
+#   Utility functions for the Add-On
+#
+###############################################################################
+def get_all_operators(self, context):
+    '''
+    DESCRIPTION
+        Get all operators for the search popup
+
+    ARGUMENTS
+        context
+
+    RETURN
+        A sortedlist of available operators
+    '''
+    items = []
+    for op_module_name in dir(bpy.ops):
+        op_module = getattr(bpy.ops, op_module_name)
+        for op_name in dir(op_module):
+            if not op_name.startswith("__"):
+                full_name = f"{op_module_name}.{op_name}"
+                label = op_name.replace("_", " ").title()
+                items.append((full_name, f"{label} ({op_module_name})", ""))
+
+    return sorted(items, key=lambda x: x[1].lower())  # Sort by label, case-insensitive
+
+
+###############################################################################
+#
+#   Classes for PIE menus and operators
+#
+###############################################################################
+class PIE_MT_CustomizableSelectionsBase(bpy.types.Menu):
+    '''
+    DESCRIPTION
+        Define the base class for the pie menu
+
+    '''
     PIE_POSITIONS = [6, 2, 4, 0, 7, 1, 5, 3]
 
     def draw(self, context):
         layout = self.layout
         pie = layout.menu_pie()
 
-        preferences = context.preferences.addons[__name__].preferences
+        preferences = context.preferences.addons[__package__].preferences
 
         for i in self.PIE_POSITIONS:
             op_name = getattr(preferences, f"{self.mode}_pie_item_{i}")
@@ -79,8 +180,6 @@ class PIE_MT_CustomizableSelectionsBase(Menu):
 
     def draw_operator(self, pie, op_string, index):
         op_name, op_args = self.parse_operator_string(op_string)
-        print("---------------")
-        print(self.common_operators)
         text = next((item[1] for item in self.common_operators if item[0] == op_string), op_string)
 
         if hasattr(bpy.ops, op_name.split('.')[0]):
@@ -122,24 +221,40 @@ class PIE_MT_CustomizableSelectionsBase(Menu):
         return op_name, op_args
 
 class PIE_MT_CustomizableSelectionsObject(PIE_MT_CustomizableSelectionsBase):
+    '''
+    DESCRIPTION
+        Define the pie menu for Object Mode (left click)
+    '''
+    bl_label  = "Linkage Marking Menu (Object Mode)"
     bl_idname = "PIE_MT_customizable_selections_object"
-    bl_label = "Linkage Marking Menu (Object Mode)"
     mode = "object"
     common_operators = COMMON_OBJECT_OPERATORS
 
 class PIE_MT_CustomizableSelectionsObject2(PIE_MT_CustomizableSelectionsBase):
+    '''
+    DESCRIPTION
+        Define the pie menu for Object Mode 2 (right click)
+    '''
     bl_idname = "PIE_MT_customizable_selections_object_2"
     bl_label = "Linkage Marking Menu (Object Mode 2)"
     mode = "object2"
     common_operators = copy.deepcopy(COMMON_OBJECT_OPERATORS)
 
 class PIE_MT_CustomizableSelectionsEdit(PIE_MT_CustomizableSelectionsBase):
+    '''
+    DESCRIPTION
+        Define the pie menu for Edit Mode
+    '''
     bl_idname = "PIE_MT_customizable_selections_edit"
     bl_label = "Linkage Marking Menu (Edit Mode)"
     mode = "edit"
     common_operators = COMMON_EDIT_OPERATORS
 
-class PIE_OT_CallCustomizablePieMenu(Operator):
+class PIE_OT_CallCustomizablePieMenu(bpy.types.Operator):
+    '''
+    DESCRIPTION
+        Define the operator to call the object1 pie menu or edit pie menu, depending on context
+    '''
     bl_idname = "pie.call_customizable_pie_menu"
     bl_label = "Call Customizable Pie Menu"
 
@@ -150,7 +265,11 @@ class PIE_OT_CallCustomizablePieMenu(Operator):
             bpy.ops.wm.call_menu_pie(name="PIE_MT_customizable_selections_edit")
         return {'FINISHED'}
 
-class PIE_OT_CallCustomizablePieMenu2(Operator):
+class PIE_OT_CallCustomizablePieMenu2(bpy.types.Operator):
+    '''
+    DESCRIPTION
+        Define the operator to call the object1 pie menu
+    '''
     bl_idname = "pie.call_customizable_pie_menu_2"
     bl_label = "Call Customizable Pie Menu 2"
 
@@ -159,27 +278,20 @@ class PIE_OT_CallCustomizablePieMenu2(Operator):
             bpy.ops.wm.call_menu_pie(name="PIE_MT_customizable_selections_object_2")
         return {'FINISHED'}
 
-def get_all_operators(self, context):
-    items = []
-    for op_module_name in dir(bpy.ops):
-        op_module = getattr(bpy.ops, op_module_name)
-        for op_name in dir(op_module):
-            if not op_name.startswith("__"):
-                full_name = f"{op_module_name}.{op_name}"
-                label = op_name.replace("_", " ").title()
-                items.append((full_name, f"{label} ({op_module_name})", ""))
-    return sorted(items, key=lambda x: x[1].lower())  # Sort by label, case-insensitive
-
-class PIE_OT_SearchOperator(Operator):
-    bl_idname = "pie.search_operator"
-    bl_label = "Search Operator"
+class PIE_OT_SearchOperator(bpy.types.Operator):
+    '''
+    DESCRIPTION
+        Define the operator for the search popup in the preferences menu
+    '''
+    bl_idname   = "pie.search_operator"
+    bl_label    = "Search Operator"
     bl_property = "operator"
 
-    operator: EnumProperty(items=get_all_operators)
-    target_property: StringProperty()
+    operator: bpy.props.EnumProperty(items = get_all_operators) # type: ignore
+    target_property: bpy.props.StringProperty() # type: ignore
 
     def execute(self, context):
-        preferences = context.preferences.addons[__name__].preferences
+        preferences = context.preferences.addons[__package__].preferences
         setattr(preferences, self.target_property, self.operator)
         return {'FINISHED'}
 
@@ -187,54 +299,99 @@ class PIE_OT_SearchOperator(Operator):
         context.window_manager.invoke_search_popup(self)
         return {'RUNNING_MODAL'}
 
-class PIE_AddonPreferences(AddonPreferences):
-    bl_idname = __name__
 
-    object_defaults = [
-        "object.select_all(action='TOGGLE')",
-        "object.delete",
-        "object.duplicate_move",
-        "object.shade_smooth",
-        "object.join",
-        "object.convert(target='MESH')",
-        "object.origin_set(type='ORIGIN_GEOMETRY')",
-        "wm.call_menu(name='VIEW3D_MT_object_apply')"
-    ]
+###############################################################################
+#
+#   Pie Menu Addon Preferences Classes
+#
+###############################################################################
+class PIE_AddonPreferences(bpy.types.AddonPreferences):
+    '''
+    DESCRIPTION
+        Define the preferences for the addon
+    '''
+    bl_idname = __package__
 
-    edit_defaults = [
-        "mesh.select_all(action='TOGGLE')",
-        "mesh.delete",
-        "mesh.duplicate_move",
-        "mesh.extrude_region_move",
-        "mesh.subdivide",
-        "mesh.separate(type='SELECTED')",
-        "mesh.faces_shade_smooth",
-        "wm.call_menu(name='VIEW3D_MT_edit_mesh_faces')"
-    ]
+    # Define the properties for the pie menu items
+    object_pie_item_0: bpy.props.EnumProperty(name="Object Pie Item 1", items=COMMON_OBJECT_OPERATORS, default=defaults["object"][0]) # type: ignore
+    object_pie_item_1: bpy.props.EnumProperty(name="Object Pie Item 2", items=COMMON_OBJECT_OPERATORS, default=defaults["object"][1]) # type: ignore
+    object_pie_item_2: bpy.props.EnumProperty(name="Object Pie Item 3", items=COMMON_OBJECT_OPERATORS, default=defaults["object"][2]) # type: ignore
+    object_pie_item_3: bpy.props.EnumProperty(name="Object Pie Item 4", items=COMMON_OBJECT_OPERATORS, default=defaults["object"][3]) # type: ignore
+    object_pie_item_4: bpy.props.EnumProperty(name="Object Pie Item 5", items=COMMON_OBJECT_OPERATORS, default=defaults["object"][4]) # type: ignore
+    object_pie_item_5: bpy.props.EnumProperty(name="Object Pie Item 6", items=COMMON_OBJECT_OPERATORS, default=defaults["object"][5]) # type: ignore
+    object_pie_item_6: bpy.props.EnumProperty(name="Object Pie Item 7", items=COMMON_OBJECT_OPERATORS, default=defaults["object"][6]) # type: ignore
+    object_pie_item_7: bpy.props.EnumProperty(name="Object Pie Item 8", items=COMMON_OBJECT_OPERATORS, default=defaults["object"][7]) # type: ignore
 
-    #   TODO: Need to remove any use of exec() in the code below
+    object2_pie_item_0: bpy.props.EnumProperty(name="Object2 Pie Item 1", items=COMMON_OBJECT2_OPERATORS, default=defaults["object2"][0]) # type: ignore
+    object2_pie_item_1: bpy.props.EnumProperty(name="Object2 Pie Item 2", items=COMMON_OBJECT2_OPERATORS, default=defaults["object2"][1]) # type: ignore
+    object2_pie_item_2: bpy.props.EnumProperty(name="Object2 Pie Item 3", items=COMMON_OBJECT2_OPERATORS, default=defaults["object2"][2]) # type: ignore
+    object2_pie_item_3: bpy.props.EnumProperty(name="Object2 Pie Item 4", items=COMMON_OBJECT2_OPERATORS, default=defaults["object2"][3]) # type: ignore
+    object2_pie_item_4: bpy.props.EnumProperty(name="Object2 Pie Item 5", items=COMMON_OBJECT2_OPERATORS, default=defaults["object2"][4]) # type: ignore
+    object2_pie_item_5: bpy.props.EnumProperty(name="Object2 Pie Item 6", items=COMMON_OBJECT2_OPERATORS, default=defaults["object2"][5]) # type: ignore
+    object2_pie_item_6: bpy.props.EnumProperty(name="Object2 Pie Item 7", items=COMMON_OBJECT2_OPERATORS, default=defaults["object2"][6]) # type: ignore
+    object2_pie_item_7: bpy.props.EnumProperty(name="Object2 Pie Item 8", items=COMMON_OBJECT2_OPERATORS, default=defaults["object2"][7]) # type: ignore
 
-    for mode, defaults in [('object', object_defaults), ('object2', object_defaults), ('edit', edit_defaults)]:
-        for i in range(8):
-            print(f"{mode}_pie_item_{i}: EnumProperty(name=f'{mode.capitalize()} Pie Item {i+1}', items=COMMON_{mode.upper()}_OPERATORS, default=defaults[i])")
-            exec(f"{mode}_pie_item_{i}: EnumProperty(name=f'{mode.capitalize()} Pie Item {i+1}', items=COMMON_{mode.upper()}_OPERATORS, default=defaults[i])")
-            exec(f"{mode}_custom_op_{i}: StringProperty(name=f'{mode.capitalize()} Custom Operator {i+1}')")
+    edit_pie_item_0: bpy.props.EnumProperty(name="Edit Pie Item 1", items=COMMON_EDIT_OPERATORS, default=defaults["edit"][0]) # type: ignore
+    edit_pie_item_1: bpy.props.EnumProperty(name="Edit Pie Item 2", items=COMMON_EDIT_OPERATORS, default=defaults["edit"][1]) # type: ignore
+    edit_pie_item_2: bpy.props.EnumProperty(name="Edit Pie Item 3", items=COMMON_EDIT_OPERATORS, default=defaults["edit"][2]) # type: ignore
+    edit_pie_item_3: bpy.props.EnumProperty(name="Edit Pie Item 4", items=COMMON_EDIT_OPERATORS, default=defaults["edit"][3]) # type: ignore
+    edit_pie_item_4: bpy.props.EnumProperty(name="Edit Pie Item 5", items=COMMON_EDIT_OPERATORS, default=defaults["edit"][4]) # type: ignore
+    edit_pie_item_5: bpy.props.EnumProperty(name="Edit Pie Item 6", items=COMMON_EDIT_OPERATORS, default=defaults["edit"][5]) # type: ignore
+    edit_pie_item_6: bpy.props.EnumProperty(name="Edit Pie Item 7", items=COMMON_EDIT_OPERATORS, default=defaults["edit"][6]) # type: ignore
+    edit_pie_item_7: bpy.props.EnumProperty(name="Edit Pie Item 8", items=COMMON_EDIT_OPERATORS, default=defaults["edit"][7]) # type: ignore
+
+    object_custom_op_0: bpy.props.StringProperty(name="Object Custom Operator 1") # type: ignore
+    object_custom_op_1: bpy.props.StringProperty(name="Object Custom Operator 2") # type: ignore
+    object_custom_op_2: bpy.props.StringProperty(name="Object Custom Operator 3") # type: ignore
+    object_custom_op_3: bpy.props.StringProperty(name="Object Custom Operator 4") # type: ignore
+    object_custom_op_4: bpy.props.StringProperty(name="Object Custom Operator 5") # type: ignore
+    object_custom_op_5: bpy.props.StringProperty(name="Object Custom Operator 6") # type: ignore
+    object_custom_op_6: bpy.props.StringProperty(name="Object Custom Operator 7") # type: ignore
+    object_custom_op_7: bpy.props.StringProperty(name="Object Custom Operator 8") # type: ignore
+
+    object2_custom_op_0: bpy.props.StringProperty(name="Object2 Custom Operator 1") # type: ignore
+    object2_custom_op_1: bpy.props.StringProperty(name="Object2 Custom Operator 2") # type: ignore
+    object2_custom_op_2: bpy.props.StringProperty(name="Object2 Custom Operator 3") # type: ignore
+    object2_custom_op_3: bpy.props.StringProperty(name="Object2 Custom Operator 4") # type: ignore
+    object2_custom_op_4: bpy.props.StringProperty(name="Object2 Custom Operator 5") # type: ignore
+    object2_custom_op_5: bpy.props.StringProperty(name="Object2 Custom Operator 6") # type: ignore
+    object2_custom_op_6: bpy.props.StringProperty(name="Object2 Custom Operator 7") # type: ignore
+    object2_custom_op_7: bpy.props.StringProperty(name="Object2 Custom Operator 8") # type: ignore
+
+    edit_custom_op_0: bpy.props.StringProperty(name="Edit Custom Operator 1") # type: ignore
+    edit_custom_op_1: bpy.props.StringProperty(name="Edit Custom Operator 2") # type: ignore
+    edit_custom_op_2: bpy.props.StringProperty(name="Edit Custom Operator 3") # type: ignore
+    edit_custom_op_3: bpy.props.StringProperty(name="Edit Custom Operator 4") # type: ignore
+    edit_custom_op_4: bpy.props.StringProperty(name="Edit Custom Operator 5") # type: ignore
+    edit_custom_op_5: bpy.props.StringProperty(name="Edit Custom Operator 6") # type: ignore
+    edit_custom_op_6: bpy.props.StringProperty(name="Edit Custom Operator 7") # type: ignore
+    edit_custom_op_7: bpy.props.StringProperty(name="Edit Custom Operator 8") # type: ignore
 
     def draw(self, context):
         layout = self.layout
 
-        for mode in ['object', 'object2', 'edit']:
+        for mode in defaults:
             box = layout.box()
             box.label(text=f"{mode.capitalize()} Mode Pie Menu")
+
             for i in range(8):
                 row = box.row()
-                row.prop(self, f"{mode}_pie_item_{i}")
-                if getattr(self, f"{mode}_pie_item_{i}") == "Custom":
-                    sub_row = row.row(align=True)
-                    sub_row.prop(self, f"{mode}_custom_op_{i}", text="")
-                    op = sub_row.operator("pie.search_operator", text="", icon='VIEWZOOM')
-                    op.target_property = f"{mode}_custom_op_{i}"
+                prop_name = f"{mode}_pie_item_{i}"
+                custom_name = f"{mode}_custom_op_{i}"
+                row.prop(self, prop_name)
 
+                if getattr(self, prop_name) == "Custom":
+                    sub_row = row.row(align=True)
+                    sub_row.prop(self, custom_name, text="")
+                    op = sub_row.operator("pie.search_operator", text="", icon='VIEWZOOM')
+                    op.target_property = custom_name
+
+
+###############################################################################
+#
+#   Define a list of classes to register with Blender Add-On system
+#
+###############################################################################
 classes = (
     PIE_MT_CustomizableSelectionsObject,
     PIE_MT_CustomizableSelectionsObject2,
@@ -242,35 +399,44 @@ classes = (
     PIE_OT_CallCustomizablePieMenu,
     PIE_OT_CallCustomizablePieMenu2,
     PIE_OT_SearchOperator,
-    PIE_AddonPreferences,
+    PIE_AddonPreferences
 )
 
-addon_keymaps = []
-
+###############################################################################
+#
+#   Registartion / Unregistartion functions.
+#
+###############################################################################
 def register():
+    #   Register modules
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    wm = bpy.context.window_manager
-    km = wm.keyconfigs.addon.keymaps.new(name='Object Mode')
+    #   Register shortcuts for object mode pie menus
+    wm  = bpy.context.window_manager
+    km  = wm.keyconfigs.addon.keymaps.new(name = 'Object Mode')
     kmi = km.keymap_items.new('pie.call_customizable_pie_menu', 'LEFTMOUSE', 'PRESS', shift=True, ctrl=True)
     kmi = km.keymap_items.new('pie.call_customizable_pie_menu_2', 'RIGHTMOUSE', 'PRESS', shift=True, ctrl=True)
     addon_keymaps.append((km, kmi))
 
-    km = wm.keyconfigs.addon.keymaps.new(name='Mesh')
+    #   Register keyboard shortcuts for edit mode pie menus
+    km  = wm.keyconfigs.addon.keymaps.new(name='Mesh')
     kmi = km.keymap_items.new('pie.call_customizable_pie_menu', 'LEFTMOUSE', 'PRESS', shift=True, ctrl=True)
     addon_keymaps.append((km, kmi))
 
 def unregister():
+    #   Unregister modules in reverse order to avoid dependency issues
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
 
+    #   Remove keyboard shortcuts
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
     if kc:
         for km, kmi in addon_keymaps:
             km.keymap_items.remove(kmi)
     addon_keymaps.clear()
+
 
 if __name__ == "__main__":
     register()
