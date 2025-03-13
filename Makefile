@@ -26,19 +26,13 @@
 ################################################################################
 PROJECT				= $(lastword $(subst /, ,$(shell pwd)))
 PLATFORM 			= $(shell uname)
+VERSION     		= $(shell git describe --tags --abbrev=0)
 TARGET				= $(strip $(if $(MAKECMDGOALS), $(MAKECMDGOALS), default))
 
 DATE				= $(shell date "+%b %d, %Y")
 TIME				= $(shell date "+%I:%M:%S %p")
 
-#  Detirmine the Version of this Project
-ifeq ($(shell test -d .git),0)
-	BRANCH          = $(lastword $(subst /, ,$(shell git branch --show-current)))
-	CURTAG          = $(shell git describe --tags --abbrev = 0)
-	VERSION         = $(if $(filter main,$(BRANCH)),$(CURTAG),$(BRANCH))
-else
-	VERSION         = v1.0.1
-endif
+
 
 #  Define the Locations of the Source, Build, and Distribution Files
 SOURCE_LOCATION     = source
@@ -112,9 +106,7 @@ LABEL 				= printf '\e[36m%20s\e[0m\n' $(1);
 LINE				= printf '\e[37m%0.s-\e[0m' {1..80}; 						\
 					  printf '\n';
 PACKAGE 			= printf '\e[33m%20s\e[0m $(1)\n' "Packaging"; 				\
-					  $(foreach FILE, $(2), 									\
-					  	  printf '%20s $(notdir $(FILE))\n';					\
-						  zip -jq $(DIST_LOCATION)/$(1) $(FILE);				)
+					  zip -jq $(DIST_LOCATION)/$(1) $(2);
 
 
 ################################################################################
@@ -177,7 +169,6 @@ BANNER:
 	@$(call INFO,Time,"$(TIME)")
 	@$(call INFO)
 	@$(call LINE)
-
 
 info: BANNER
 	@$(call INFO)
