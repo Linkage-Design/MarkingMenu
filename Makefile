@@ -134,7 +134,7 @@ default: BANNER
 dist: BANNER
 	@$(call LABEL,"Starting Distribution Target....")
 	@$(call CHKDIR,$(DIST_LOCATION))
-	$(call PACKAGE,$(PROJECT)-$(VERSION).zip,$(wildcard $(BUILD_LOCATION)/*))
+	@$(call PACKAGE,$(PROJECT)-$(VERSION).zip,$(wildcard $(BUILD_LOCATION)/*))
 	@$(call LABEL,"Distribution Target Finished...")
 
 
