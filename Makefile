@@ -36,7 +36,7 @@ BRANCH          = $(lastword $(subst /, ,$(shell git branch --show-current)))
 LASTVERS      	= $(shell git describe --tags --abbrev=0)
 VERSION 		= $(strip 														\
 				      $(if $(filter main,$(BRANCH)),							\
- 					      $(shell git describe --tags --abbrev=0);,				\
+ 					      $(shell git describe --tags --abbrev=0),				\
 			  		      v0.0.0												\
 					  )															\
 				   )
