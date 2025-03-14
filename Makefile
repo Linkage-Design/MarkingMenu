@@ -175,9 +175,6 @@ BANNER:
 	@$(call INFO,Date,"$(DATE)")
 	@$(call INFO,Time,"$(TIME)")
 	@$(call INFO)
-	@$(call INFO,Git,"$(GIT)")
-	@$(call INFO,Branch,"$(BRANCH)")
-	@$(call INFO)
 	@$(call LINE)
 info: BANNER
 	@$(call INFO)
