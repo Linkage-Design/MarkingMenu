@@ -151,73 +151,134 @@ def get_all_operators(self, context):
 #
 ###############################################################################
 class PIE_MT_CustomizableSelectionsBase(bpy.types.Menu):
-    '''
-    DESCRIPTION
-        Define the base class for the pie menu
-
-    '''
     PIE_POSITIONS = [6, 2, 4, 0, 7, 1, 5, 3]
 
     def draw(self, context):
-        layout = self.layout
-        pie = layout.menu_pie()
+        '''
+        DESCRIPTION
+            This method is called by Blender when it needs to draw these
+            Pie Menu Items
 
+        ARGUMENTS
+            context     (in)   A bpy.context object we can use to get info
+
+        RETURN
+            None
+        '''
+        #   Get the preference data for this package
         preferences = context.preferences.addons[__package__].preferences
 
+        #   Define a UI layout for the PieMenu
+        pie_layt = self.layout.menu_pie()
+
         for i in self.PIE_POSITIONS:
-            op_name = getattr(preferences, f"{self.mode}_pie_item_{i}")
+            op_name   = getattr(preferences, f"{self.mode}_pie_item_{i}")
             custom_op = getattr(preferences, f"{self.mode}_custom_op_{i}")
 
             if op_name == "Custom":
                 if custom_op:
-                    self.draw_custom_operator(pie, custom_op, i)
+                    self.draw_custom_operator(pie_layt, custom_op)
                 else:
-                    pie.separator()
+                    pie_layt.separator()
+
             elif op_name:
-                self.draw_operator(pie, op_name, i)
+                self.draw_operator(pie_layt, op_name)
+
             else:
-                pie.separator()
+                pie_layt.separator()
 
-    def draw_operator(self, pie, op_string, index):
+    def draw_operator(self, pie, op_string):
+        '''
+        DESCRIPTION
+            This method is called by the draw method to set attribute values
+            for the standard operators
+
+        ARGUMENTS
+            pie         (in)    A Pie Menu Object to populate
+            op_string   (in)    The operator string to add to the pie menu
+
+        RETURN
+            None
+        '''
+        #   Seperate the operator name from its arguments in op_string
         op_name, op_args = self.parse_operator_string(op_string)
-        text = next((item[1] for item in self.common_operators if item[0] == op_string), op_string)
 
-        if hasattr(bpy.ops, op_name.split('.')[0]):
-            op = pie.operator(op_name, text=text)
-            for key, value in op_args.items():
+        #   Detirmine the text label of the operator from its function
+        op_text = next((item[1] for item in self.common_operators if item[0] == op_string), op_string)
+
+        #   Check to see if the operator name exists in the python library
+        if hasattr(bpy.ops, op_name):
+            #   Add the op_name and op_text to the pie menu
+            pie_menu_item = pie.operator(op_name, text = op_text)
+
+            #   Add the op_args to the pie_menu_item
+            for arg, value in op_args.items():
                 try:
-                    setattr(op, key, eval(value))
+                    setattr(pie_menu_item, arg, value)
                 except:
-                    self.report({'WARNING'}, f"Could not set property {key} for operator {op_name}")
+                    self.report({'WARNING'}, f"Could not set property {arg} for operator {op_name}")
         else:
             pie.separator()
             self.report({'WARNING'}, f"Operator {op_name} not found")
 
-    def draw_custom_operator(self, pie, op_string, index):
+    def draw_custom_operator(self, pie, op_string):
+        '''
+        DESCRIPTION
+            This method is called by the draw method to set attribute values
+            for the custom operators
+
+        ARGUMENTS
+            pie         (in)    A Pie Menu Object to populate
+            op_string   (in)    The operator string to add to the pie menu
+
+        RETURN
+            None
+        '''
+        #   Seperate the operator name from its arguments in op_string
         op_name, op_args = self.parse_operator_string(op_string)
-        text = op_name.split(".")[-1].replace("_", " ").title()
+
+        #   Detirmine the text label of the operator from its function
+        op_text = op_name.split(".")[-1].replace("_", " ").title()
 
         if hasattr(bpy.ops, op_name.split('.')[0]):
-            op = pie.operator(op_name, text=text)
-            for key, value in op_args.items():
+            #   Add the op_name and op_text to the pie menu
+            pie_menu_item = pie.operator(op_name, text = op_text)
+
+            #   Add the op_args to the pie_menu_item
+            for arg, value in op_args.items():
                 try:
-                    setattr(op, key, eval(value))
+                    setattr(pie_menu_item, arg, value)
                 except:
-                    self.report({'WARNING'}, f"Could not set property {key} for operator {op_name}")
+                    self.report({'WARNING'}, f"Could not set property {arg} for operator {op_name}")
         else:
             pie.separator()
             self.report({'WARNING'}, f"Custom operator {op_name} not found")
 
     def parse_operator_string(self, op_string):
+        '''
+        DESCRIPTION
+            This method is used by the draw and draw_custom methods to parse
+            the op_string data into its parts (op_name, and op_args)
+
+        ARGUMENTS
+            op_string   (in)    The variable to parse
+
+        RETURN
+            op_name (str)       The name of the operatot
+            op_args (dict)      A dictionary containing all the args and
+                                their values
+        '''
         op_parts = op_string.split("(", 1)
         op_name = op_parts[0]
         op_args = {}
+
         if len(op_parts) > 1:
             args_string = op_parts[1].rstrip(")")
             if args_string:
                 for arg in args_string.split(","):
                     key, value = arg.split("=")
-                    op_args[key.strip()] = value.strip()
+                    op_args[key.strip()] = value.strip("'")
+
         return op_name, op_args
 
 class PIE_MT_CustomizableSelectionsObject(PIE_MT_CustomizableSelectionsBase):
@@ -312,7 +373,7 @@ class PIE_AddonPreferences(bpy.types.AddonPreferences):
     '''
     bl_idname = __package__
 
-    # Define the properties for the pie menu items
+    #   Define the properties for the pie menu items
     object_pie_item_0: bpy.props.EnumProperty(name="Object Pie Item 1", items=COMMON_OBJECT_OPERATORS, default=defaults["object"][0]) # type: ignore
     object_pie_item_1: bpy.props.EnumProperty(name="Object Pie Item 2", items=COMMON_OBJECT_OPERATORS, default=defaults["object"][1]) # type: ignore
     object_pie_item_2: bpy.props.EnumProperty(name="Object Pie Item 3", items=COMMON_OBJECT_OPERATORS, default=defaults["object"][2]) # type: ignore
@@ -436,7 +497,6 @@ def unregister():
         for km, kmi in addon_keymaps:
             km.keymap_items.remove(kmi)
     addon_keymaps.clear()
-
 
 if __name__ == "__main__":
     register()

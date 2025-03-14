@@ -24,15 +24,22 @@
 #   made available to any other person or organization.
 #
 ################################################################################
-PROJECT				= $(lastword $(subst /, ,$(shell pwd)))
-PLATFORM 			= $(shell uname)
-VERSION     		= $(shell git describe --tags --abbrev=0)
-TARGET				= $(strip $(if $(MAKECMDGOALS), $(MAKECMDGOALS), default))
+PROJECT			= $(lastword $(subst /, ,$(shell pwd)))
+PLATFORM 		= $(shell uname)
+TARGET			= $(strip $(if $(MAKECMDGOALS), $(MAKECMDGOALS), default))
 
-DATE				= $(shell date "+%b %d, %Y")
-TIME				= $(shell date "+%I:%M:%S %p")
+DATE			= $(shell date "+%b %d, %Y")
+TIME			= $(shell date "+%I:%M:%S %p")
 
-
+#  Detirmine the Version of this Project
+BRANCH          = $(lastword $(subst /, ,$(shell git branch --show-current)))
+LASTVERS      	= $(shell git describe --tags --abbrev=0)
+VERSION 		= $(strip 														\
+				      $(if $(filter main,$(BRANCH)),							\
+ 					      $(shell git describe --tags --abbrev=0);,				\
+			  		      v0.0.0												\
+					  )															\
+				   )
 
 #  Define the Locations of the Source, Build, and Distribution Files
 SOURCE_LOCATION     = source
@@ -58,7 +65,7 @@ VPATH               = $(BUILD_LOCATION) $(SOURCE_LOCATION) $(DIST_LOCATION)
 BLENDER_VERSION     = 4.3
 BL_MANIFEST_FILE    = blender_manifest.toml
 BL_SCHEMA_VERSION   = "1.0.0"
-BL_ID				= "LinkageMarkingMenu"
+BL_ID				= "Linkage$(PROJECT)"
 BL_NAME				= "Linkage Marking Menu"
 BL_VERSION			= $(shell echo $(VERSION) | tr -d [a-z][A-Z])
 BL_TAGLINE			= "Customizable Marking Menu for Object and Edit modes"
@@ -127,7 +134,7 @@ default: BANNER
 dist: BANNER
 	@$(call LABEL,"Starting Distribution Target....")
 	@$(call CHKDIR,$(DIST_LOCATION))
-	@$(call PACKAGE,$(PROJECT)-$(VERSION).zip,$(wildcard $(BUILD_LOCATION)/*))
+	$(call PACKAGE,$(PROJECT)-$(VERSION).zip,$(wildcard $(BUILD_LOCATION)/*))
 	@$(call LABEL,"Distribution Target Finished...")
 
 
@@ -168,8 +175,10 @@ BANNER:
 	@$(call INFO,Date,"$(DATE)")
 	@$(call INFO,Time,"$(TIME)")
 	@$(call INFO)
+	@$(call INFO,Git,"$(GIT)")
+	@$(call INFO,Branch,"$(BRANCH)")
+	@$(call INFO)
 	@$(call LINE)
-
 info: BANNER
 	@$(call INFO)
 	@$(call INFO,SOURCE_LOCATION,$(SOURCE_LOCATION))
