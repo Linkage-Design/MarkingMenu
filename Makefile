@@ -31,6 +31,9 @@ TARGET			= $(strip $(if $(MAKECMDGOALS), $(MAKECMDGOALS), default))
 DATE			= $(shell date "+%b %d, %Y")
 TIME			= $(shell date "+%I:%M:%S %p")
 
+COMPANY			= Linkage Design
+LICENSE_FILE	= LICENSE
+
 #  Detirmine the Version of this Project
 BRANCH          = $(lastword $(subst /, ,$(shell git branch --show-current)))
 LASTVERS      	= $(shell git describe --tags --abbrev=0)
@@ -50,9 +53,6 @@ TEST_LOCATION 		= $(HOME)/Library/Application\ Support/Blender/$(BLENDER_VERSION
 BUILD_FILES		 	= $(wildcard $(BUILD_LOCATION)/*)
 SOURCE_FILES        = $(wildcard $(SOURCE_LOCATION)/*)
 
-#  Define the License File
-LICENSE_FILE		= LICENSE
-
 #  Define the VPATH
 VPATH               = $(BUILD_LOCATION) $(SOURCE_LOCATION) $(DIST_LOCATION)
 
@@ -65,17 +65,17 @@ VPATH               = $(BUILD_LOCATION) $(SOURCE_LOCATION) $(DIST_LOCATION)
 BLENDER_VERSION     = 4.3
 BL_MANIFEST_FILE    = blender_manifest.toml
 BL_SCHEMA_VERSION   = "1.0.0"
-BL_ID				= "Linkage$(PROJECT)"
-BL_NAME				= "Linkage Marking Menu"
+BL_ID				= "$(firstword $(COMPANY))$(PROJECT)"
+BL_NAME				= "$(firstword $(COMPANY)) $(strip $(shell echo $(PROJECT) | sed 's/[A-Z]/ &/g'))"
 BL_VERSION			= $(shell echo $(VERSION) | tr -d [a-z][A-Z])
 BL_TAGLINE			= "Customizable Marking Menu for Object and Edit modes"
-BL_MAINTAINER		= "Linkage Design <acheck@linkage-d.com>"
+BL_MAINTAINER		= "$(COMPANY) <acheck@linkage-d.com>"
 BL_TYPE				= "add-on"
 BL_TAGS				= ["User Interface"]
 BL_VERSION_MIN		= "4.2.0"
 BL_LICENSE			= ["SPDX:GPL-3.0-or-later"]
 BL_WEBSITE			= "https://blendermarket.com/products/customizable-marking-menus"
-BL_COPYRIGHT		= ["2024 Linkage Design"]
+BL_COPYRIGHT		= ["2024 $(COMPANY)"]
 
 
 ################################################################################
@@ -83,37 +83,38 @@ BL_COPYRIGHT		= ["2024 Linkage Design"]
 #	Function and Macros Definitions
 #
 ################################################################################
-CHKDIR 				= printf '\e[33m%20s\e[0m $(1)\n' "Validating Folder"; 		\
-				  	  if ! test -d $(1); then 									\
-					  	  mkdir -p $(1); 										\
-				  	  fi
-COPY 				= if test -f $(1); then 									\
-				      	  printf '\e[33m%20s\e[0m $(1)\n' "Copying";			\
-					      cp -r $(1) $(2);										\
-				  	  fi
-DELETE 				= if test -e $(1); then 									\
-				          printf '\e[31m%20s\e[0m $(1)\n' "Deleting";			\
-					      rm -rf $(1);											\
-				      fi
-BUILD_MANIFEST		= printf '\e[33m%20s\e[0m $(1)\n' "Creating Manifest";		\
-				  	  printf 'schema_version = $(BL_SCHEMA_VERSION)				\
-				  	  \nid = $(BL_ID)		      		                        \
-					  \nname = $(BL_NAME)										\
-				  	  \nversion = "$(BL_VERSION)"								\
-				  	  \ntagline = $(BL_TAGLINE)									\
-					  \nmaintainer = $(BL_MAINTAINER)							\
-				  	  \ntype = $(BL_TYPE)										\
-				  	  \ntags = $(BL_TAGS)										\
-				  	  \nblender_version_min = $(BL_VERSION_MIN)					\
-				  	  \nlicense = $(BL_LICENSE)									\
-				  	  \nwebsite = $(BL_WEBSITE)									\
-				  	  \ncopyright = $(BL_COPYRIGHT)' > $(1);
-INFO 				= printf '\e[33m%20s\e[0m %s\n' $(1) $(2);
-LABEL 				= printf '\e[36m%20s\e[0m\n' $(1);
-LINE				= printf '\e[37m%0.s-\e[0m' {1..80}; 						\
-					  printf '\n';
-PACKAGE 			= printf '\e[33m%20s\e[0m $(1)\n' "Packaging"; 				\
-					  zip -jq $(DIST_LOCATION)/$(1) $(2);
+CHKDIR 			= printf '\e[33m%20s\e[0m $(1)\n' "Validating Folder"; 			\
+				  if ! test -d $(1); then 										\
+				 	  mkdir -p $(1); 											\
+				  fi
+COPY 			= if test -f $(1); then 										\
+				      printf '\e[33m%20s\e[0m $(1)\n' "Copying";				\
+					  cp -r $(1) $(2);											\
+				  fi
+DELETE 			= if test -e $(1); then 										\
+				      printf '\e[31m%20s\e[0m $(1)\n' "Deleting";				\
+					  rm -rf $(1);												\
+				  fi
+BUILD_MANIFEST	= printf '\e[33m%20s\e[0m $(1)\n' "Creating Manifest";			\
+				  printf 'schema_version = $(BL_SCHEMA_VERSION)\n' > $(1);		\
+				  printf 'id = $(BL_ID)\n' >> $(1);	                        	\
+				  printf 'version = "$(BL_VERSION)"\n' >> $(1);					\
+				  printf 'name = $(BL_NAME)\n' >> $(1);							\
+				  printf 'maintainer = $(BL_MAINTAINER)\n' >> $(1);				\
+				  printf 'tagline = $(BL_TAGLINE)\n' >> $(1);					\
+				  printf 'type = $(BL_TYPE)\n' >> $(1);							\
+				  printf 'tags = $(BL_TAGS)\n' >> $(1);							\
+				  printf 'blender_version_min = $(BL_VERSION_MIN)\n' >> $(1);	\
+				  printf 'license = $(BL_LICENSE)\n' >> $(1);					\
+				  printf 'website = $(BL_WEBSITE)\n' >> $(1);					\
+				  printf 'copyright = $(BL_COPYRIGHT)\n' >> $(1);
+
+INFO 			= printf '\e[33m%20s\e[0m %s\n' $(1) $(2);
+LABEL 			= printf '\e[36m%20s\e[0m\n' $(1);
+LINE			= printf '\e[37m%0.s-\e[0m' {1..80}; 							\
+				  printf '\n';
+PACKAGE 		= printf '\e[33m%20s\e[0m $(1)\n' "Packaging"; 					\
+				  zip -jq $(DIST_LOCATION)/$(1) $(2);
 
 
 ################################################################################
@@ -176,6 +177,8 @@ BANNER:
 	@$(call INFO,Time,"$(TIME)")
 	@$(call INFO)
 	@$(call LINE)
+
+
 info: BANNER
 	@$(call INFO)
 	@$(call INFO,SOURCE_LOCATION,$(SOURCE_LOCATION))
