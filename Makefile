@@ -11,7 +11,7 @@
 #       Jayme Wilkinson
 #
 #   CREATED
-#       Feb 17, 2025 Initial Version
+#       Feb 17, 2025
 #
 ################################################################################
 #
@@ -45,13 +45,15 @@ VERSION 		= $(strip 														\
 				   )
 
 #  Define the Locations of the Source, Build, and Distribution Files
-SOURCE_LOCATION     = source
-BUILD_LOCATION      = build
-DIST_LOCATION       = dist
-TEST_LOCATION 		= $(HOME)/Library/Application\ Support/Blender/$(BLENDER_VERSION)/extensions/user_default
+SOURCE_LOCATION = source
+ICON_LOCATION   = icons
+BUILD_LOCATION  = build
+DIST_LOCATION   = dist
+TEST_LOCATION 	= $(HOME)/Library/Application\ Support/Blender/$(BLENDER_VERSION)/extensions/user_default
 
-BUILD_FILES		 	= $(wildcard $(BUILD_LOCATION)/*)
-SOURCE_FILES        = $(wildcard $(SOURCE_LOCATION)/*)
+BUILD_FILES		= $(wildcard $(BUILD_LOCATION)/*)
+SOURCE_FILES    = $(wildcard $(SOURCE_LOCATION)/*)
+ICON_FILES		= $(wildcard $(ICON_LOCATION)/*)
 
 #  Define the VPATH
 VPATH               = $(BUILD_LOCATION) $(SOURCE_LOCATION) $(DIST_LOCATION)
@@ -114,7 +116,7 @@ LABEL 			= printf '\e[36m%20s\e[0m\n' $(1);
 LINE			= printf '\e[37m%0.s-\e[0m' {1..80}; 							\
 				  printf '\n';
 PACKAGE 		= printf '\e[33m%20s\e[0m $(1)\n' "Packaging"; 					\
-				  zip -jq $(DIST_LOCATION)/$(1) $(2);
+				  cd build; zip -qr ../$(DIST_LOCATION)/$(1) *;
 
 
 ################################################################################
@@ -128,6 +130,9 @@ default: BANNER
 	@$(call COPY,$(LICENSE_FILE),$(BUILD_LOCATION))
 	@$(foreach FILE,$(SOURCE_FILES),											\
 		$(call COPY,$(FILE),$(BUILD_LOCATION));									)
+	@$(call CHKDIR,$(BUILD_LOCATION)/$(ICON_LOCATION))
+	@$(foreach ICON,$(ICON_FILES),												\
+		$(call COPY,$(ICON),$(BUILD_LOCATION)/$(ICON_LOCATION));				)
 	@$(call BUILD_MANIFEST,$(BUILD_LOCATION)/$(BL_MANIFEST_FILE))
 	@$(call LABEL,"Finished Default Target...")
 
@@ -135,11 +140,16 @@ default: BANNER
 dist: BANNER
 	@$(call LABEL,"Starting Distribution Target....")
 	@$(call CHKDIR,$(DIST_LOCATION))
-	@$(call PACKAGE,$(PROJECT)-$(VERSION).zip,$(wildcard $(BUILD_LOCATION)/*))
+	@$(call DELETE,$(DIST_LOCATION)/$(PROJECT)-$(VERSION).zip)
+	@$(call PACKAGE,$(PROJECT)-$(VERSION).zip)
 	@$(call LABEL,"Distribution Target Finished...")
 
 
-#  Clean Targets
+################################################################################
+#
+#  	Clean Targets
+#
+################################################################################
 clean: BANNER
 	@$(call LABEL,"Starting Clean Target...")
 	@$(foreach ITEM, $(shell ls -A $(BUILD_LOCATION)),							\
@@ -154,7 +164,11 @@ clobber: BANNER
 	@$(call LABEL,"Clobber Target Finished...")
 
 
-#  Test Targets
+################################################################################
+#
+#  	Test Targets
+#
+################################################################################
 test: default dist BANNER
 	@$(call LABEL,"Installing local version of $(PROJECT)...")
 	@$(call DELETE,$(TEST_LOCATION)/$(PROJECT))
@@ -163,7 +177,11 @@ test: default dist BANNER
 	@blender
 
 
+################################################################################
+#
 #	Informational Targets
+#
+################################################################################
 BANNER:
 	@$(call LINE)
 	@$(call INFO)
