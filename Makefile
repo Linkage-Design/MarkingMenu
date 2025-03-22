@@ -56,7 +56,7 @@ SOURCE_FILES    = $(wildcard $(SOURCE_LOCATION)/*)
 ICON_FILES		= $(wildcard $(ICON_LOCATION)/*)
 
 #  Define the VPATH
-VPATH               = $(BUILD_LOCATION) $(SOURCE_LOCATION) $(DIST_LOCATION)
+VPATH           = $(BUILD_LOCATION) $(SOURCE_LOCATION) $(DIST_LOCATION)
 
 
 ################################################################################
@@ -68,7 +68,10 @@ BLENDER_VERSION     = 4.3
 BL_MANIFEST_FILE    = blender_manifest.toml
 BL_SCHEMA_VERSION   = "1.0.0"
 BL_ID				= "$(firstword $(COMPANY))$(PROJECT)"
-BL_NAME				= "$(firstword $(COMPANY)) $(strip $(shell echo $(PROJECT) | sed 's/[A-Z]/ &/g'))"
+BL_NAME				= "$(firstword $(COMPANY)) $(strip 							\
+						  $(shell echo $(PROJECT) | sed 's/[A-Z]/ &/g')			\
+						  $(if $(filter main,$(BRANCH)),,						\
+						  	(For Testing Purposes Only!!!)))"
 BL_VERSION			= $(shell echo $(VERSION) | tr -d [a-z][A-Z])
 BL_TAGLINE			= "Customizable Marking Menu for Object and Edit modes"
 BL_MAINTAINER		= "$(COMPANY) <acheck@linkage-d.com>"

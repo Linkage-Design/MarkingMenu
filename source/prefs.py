@@ -37,8 +37,8 @@ from   . import utils
 
 #  Define the URL Locations
 URL_LIST = [
-    ("Linkage Design", "linkage-d.com/tools-training"),
     ("Report Issues", "github.com/Linkage-Design/MarkingMenus/issues"),
+    ("Linkage Design", "linkage-d.com/tools-training"),
     ("Blender Marketplace", "blendermarket.com/products/customizable-marking-menus"),
     ("Gumroad", "linkagedesign.gumroad.com/l/markingmenus"),
     ("Instagram", "instagram.com/LinkageDesign"),
