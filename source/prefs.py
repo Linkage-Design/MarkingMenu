@@ -258,7 +258,7 @@ class Preferences(bpy.types.AddonPreferences):
                     #   Create the button
                     op = rowLayt.operator("wm.url_open", text = name,
                                 icon_value = icon_collections[iconId].icon_id)
-                    op.url = f"https://www.{url}"
+                    op.url = f"https://{url}"
 
                 except IndexError as e:
                     break
