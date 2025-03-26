@@ -129,7 +129,8 @@ BLENDER_BUILD	 = blender --command extension build --verbose					\
 					   --output-filepath $(1);
 BLENDER_INSTALL  = blender --command extension install-file -e					\
 					   -r user_default $(1);
-BLENDER_MANIFEST = printf 'schema_version = $(BL_SCHEMA_VERSION)\n' > $(1);		\
+BLENDER_MANIFEST = $(call INFO,"Creating Manifest",$(1))						\
+				   printf 'schema_version = $(BL_SCHEMA_VERSION)\n' > $(1);		\
 				   printf 'id = $(BL_ID)\n' >> $(1);	                       	\
 				   printf 'version = "$(BL_VERSION)"\n' >> $(1);				\
 				   printf 'name = $(BL_NAME)\n' >> $(1);						\
