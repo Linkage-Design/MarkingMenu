@@ -60,7 +60,7 @@ def loadIcons():
     '''
     DEFINITION
         This method is used to load and store icons that are defined by this
-        add-on. The data is stored in the prefs dictionary icon_collections
+        add-on. The data is stored in the prefs dictionary icon_collection
 
     ARGUMENTS
         None
@@ -72,23 +72,13 @@ def loadIcons():
     iconPath = iconPath.joinpath("icons")
     iconColl = bpy.utils.previews.new()
 
+    #   Load the icons from the icon directory
     for icon in iconPath.iterdir():
+        if not icon.name.endswith('.png'):
+            continue
         name = icon.stem.replace('_', '')
         path = str(icon)
         iconColl.load(name, path, 'IMAGE')
 
+    #   Store the icon pack in the preferences
     return(iconColl)
-
-
-###############################################################################
-#
-#   Registartion / Unregistartion functions.
-#
-###############################################################################
-def register():
-    #   Register this module
-    bpy.utils.register_module(__name__)
-
-def unregister():
-    #   Unregister this module
-    bpy.utils.unregister_class(__name__)

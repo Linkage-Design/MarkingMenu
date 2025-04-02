@@ -29,8 +29,8 @@
 import  bpy
 import  copy
 
-from   . import prefs
-from   . import utils
+from    . import prefs
+from    . import utils
 
 
 ###############################################################################
@@ -179,8 +179,9 @@ class PIE_MT_CustomizableSelectionsObject(PIE_MT_CustomizableSelectionsBase):
     DESCRIPTION
         Define the pie menu for Object Mode (left click)
     '''
-    bl_label  = "Linkage Marking Menu (Object Mode)"
     bl_idname = "PIE_MT_customizable_selections_object"
+    bl_label  = "Linkage Marking Menu (Object Mode)"
+
     mode = "object"
     common_operators = prefs.OBJECT_OPERATORS
 
@@ -191,7 +192,8 @@ class PIE_MT_CustomizableSelectionsObject2(PIE_MT_CustomizableSelectionsBase):
         Define the pie menu for Object Mode 2 (right click)
     '''
     bl_idname = "PIE_MT_customizable_selections_object_2"
-    bl_label = "Linkage Marking Menu (Object Mode 2)"
+    bl_label  = "Linkage Marking Menu (Object Mode 2)"
+
     mode = "object2"
     common_operators = copy.deepcopy(prefs.OBJECT_OPERATORS)
 
@@ -202,7 +204,8 @@ class PIE_MT_CustomizableSelectionsEdit(PIE_MT_CustomizableSelectionsBase):
         Define the pie menu for Edit Mode
     '''
     bl_idname = "PIE_MT_customizable_selections_edit"
-    bl_label = "Linkage Marking Menu (Edit Mode)"
+    bl_label  = "Linkage Marking Menu (Edit Mode)"
+
     mode = "edit"
     common_operators = prefs.EDIT_OPERATORS
 
@@ -213,7 +216,7 @@ class PIE_OT_CallCustomizablePieMenu(bpy.types.Operator):
         Define the operator to call the object1 pie menu or edit pie menu, depending on context
     '''
     bl_idname = "pie.call_customizable_pie_menu"
-    bl_label = "Call Customizable Pie Menu"
+    bl_label  = "Call Customizable Pie Menu"
 
     def execute(self, context):
         if context.mode == 'OBJECT':
@@ -229,7 +232,7 @@ class PIE_OT_CallCustomizablePieMenu2(bpy.types.Operator):
         Define the operator to call the object1 pie menu
     '''
     bl_idname = "pie.call_customizable_pie_menu_2"
-    bl_label = "Call Customizable Pie Menu 2"
+    bl_label  = "Call Customizable Pie Menu 2"
 
     def execute(self, context):
         if context.mode == 'OBJECT':
@@ -270,7 +273,8 @@ classes = ( PIE_MT_CustomizableSelectionsObject,
             PIE_OT_CallCustomizablePieMenu,
             PIE_OT_CallCustomizablePieMenu2,
             PIE_OT_SearchOperator,
-            prefs.Preferences )
+            prefs.MarkingMenusPreferences )
+
 
 ###############################################################################
 #
@@ -278,6 +282,17 @@ classes = ( PIE_MT_CustomizableSelectionsObject,
 #
 ###############################################################################
 def register():
+    '''
+    DESCRIPTION
+        This method is used by Blender to register the components of this
+        Add-On.
+
+    ARGUMENTS
+        None
+
+    RETURN
+        None
+    '''
     #   Register modules
     for cls in classes:
         bpy.utils.register_class(cls)
@@ -295,6 +310,17 @@ def register():
     prefs.addon_keymaps.append((km, kmi))
 
 def unregister():
+    '''
+    DESCRIPTION
+        This method is used by Blender to unregister the classes we
+        registered in this Add-On's register method.
+
+    ARGUMENTS
+        None
+
+    RETURN
+        None
+    '''
     #   Unregister modules in reverse order to avoid dependency issues
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
@@ -309,7 +335,7 @@ def unregister():
 
 ###############################################################################
 #
-#
+#   This is the main registration entrypoint for this Add-On
 #
 ###############################################################################
 if __name__ == "__main__":

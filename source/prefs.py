@@ -31,7 +31,7 @@ from   . import utils
 
 ###############################################################################
 #
-#   Define Default values for this class here
+#   Define Default values for this module here
 #
 ###############################################################################
 
@@ -44,13 +44,6 @@ URL_LIST = [
     ("Instagram", "instagram.com/LinkageDesign"),
     ("YouTube", "youtube.com/c/LinkageDesign")
 ]
-
-
-###############################################################################
-#
-#   Define Default Values for this Add-on
-#
-###############################################################################
 
 #   Default object mode operators
 OBJECT_OPERATORS = [
@@ -130,23 +123,16 @@ defaults = {
             ]
 }
 
-#   Define a place to store and process this add-on's keymaps.
+#   Define a place to store and process our keymaps and icon collection.
 addon_keymaps = []
-
-#   Define a variable to store icon collections for this add-on
-icon_collections = utils.loadIcons()
+icon_collection = utils.loadIcons()
 
 ###############################################################################
 #
-#   Pie Menu Addon Preferences Classes
+#   Marking Menus Addon Preferences Class
 #
 ###############################################################################
-class Preferences(bpy.types.AddonPreferences):
-    '''
-    DESCRIPTION
-        This class defines the preferences for this add-on
-    '''
-
+class MarkingMenusPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
 
     #   Define the properties for the pie menu items
@@ -207,8 +193,9 @@ class Preferences(bpy.types.AddonPreferences):
     def draw(self, context):
         '''
         DESCRIPTION
-            This method draws the user interface for this add-on preferenses. This
-            ui lives in the add-ons section of the user's preference window
+            This method draws the user interface for this add-on preferenses.
+            This ui lives in the add-ons section of the user's preference
+            window
 
         ARGUMENTS
             context     (in)    A Blender context to get some info from.
@@ -216,7 +203,6 @@ class Preferences(bpy.types.AddonPreferences):
         RETURN
             None
         '''
-
         #   Create a parent layout for our preference panels
         parentLayt = self.layout
 
@@ -257,22 +243,8 @@ class Preferences(bpy.types.AddonPreferences):
 
                     #   Create the button
                     op = rowLayt.operator("wm.url_open", text = name,
-                                icon_value = icon_collections[iconId].icon_id)
+                                icon_value = icon_collection[iconId].icon_id)
                     op.url = f"https://{url}"
 
                 except IndexError as e:
                     break
-
-
-###############################################################################
-#
-#   Registartion / Unregistartion functions.
-#
-###############################################################################
-def register():
-    #   Register module
-    bpy.utils.register_module(__name__)
-
-def unregister():
-    #   Unregister module
-    bpy.utils.unregister_class(__name__)
