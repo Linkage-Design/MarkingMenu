@@ -82,7 +82,7 @@ VERSION 		= $(strip 														\
  					      $(shell git describe --tags --abbrev=0),				\
 			  		      v0.0.0												\
 					  )															\
-				  )
+                  )
 
 #	Define the Package Name and File
 PACKAGE_NAME	= $(firstword $(COMPANY))$(PROJECT)
@@ -211,7 +211,7 @@ check: BANNER
 #
 ################################################################################
 clean: BANNER
-	@$(call LABEL,"Cleaning $(PROJECT)")
+    @$(call LABEL,"Cleaning $(PROJECT)")
 	@$(foreach ITEM, $(shell ls -A $(BUILD_LOCATION)),							\
 		$(call DELETE,$(BUILD_LOCATION)/$(ITEM));								)
 	@$(call BLANK)
@@ -243,6 +243,22 @@ uninst: BANNER
 	@$(call BLANK)
 
 
+################################################################################
+#
+#	Install and Uninstall Targets
+#
+################################################################################
+inst: BANNER
+	@$(call LABEL,Installing $(PACKAGE_FILE))
+	@$(call BLENDER_INSTALL,$(DIST_LOCATION)/$(PACKAGE_FILE))
+	@$(call BLANK)
+
+uninst: BANNER
+	@$(call LABEL,Removing $(PACKAGE_FILE))
+	@$(call BLENDER_REMOVE,$(PROJECT))
+	@$(call BLANK)
+
+
 ###############################################################################
 #
 #  	Test Targets
@@ -254,11 +270,11 @@ test: BANNER default dist check inst
 	@$(call BLANK)
 
 
-###############################################################################
+################################################################################
 #
 #	Informational Targets
 #
-###############################################################################
+################################################################################
 BANNER:
 	@$(call EDGE)
 	@$(call EDGE,"")
