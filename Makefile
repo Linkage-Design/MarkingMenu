@@ -211,7 +211,7 @@ check: BANNER
 #
 ################################################################################
 clean: BANNER
-    @$(call LABEL,"Cleaning $(PROJECT)")
+	@$(call LABEL,"Cleaning $(PROJECT)")
 	@$(foreach ITEM, $(shell ls -A $(BUILD_LOCATION)),							\
 		$(call DELETE,$(BUILD_LOCATION)/$(ITEM));								)
 	@$(call BLANK)
