@@ -243,22 +243,6 @@ uninst: BANNER
 	@$(call BLANK)
 
 
-################################################################################
-#
-#	Install and Uninstall Targets
-#
-################################################################################
-inst: BANNER
-	@$(call LABEL,Installing $(PACKAGE_FILE))
-	@$(call BLENDER_INSTALL,$(DIST_LOCATION)/$(PACKAGE_FILE))
-	@$(call BLANK)
-
-uninst: BANNER
-	@$(call LABEL,Removing $(PACKAGE_FILE))
-	@$(call BLENDER_REMOVE,$(PROJECT))
-	@$(call BLANK)
-
-
 ###############################################################################
 #
 #  	Test Targets
