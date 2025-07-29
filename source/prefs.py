@@ -35,16 +35,6 @@ from   . import utils
 #
 ###############################################################################
 
-#  Define the URL Locations
-URL_LIST = [
-    ("Report Issues", "github.com/Linkage-Design/MarkingMenus/issues"),
-    ("Linkage Design", "linkage-d.com/tools-training"),
-    ("Superhive", "superhivemarket.com/products/customizable-marking-menus"),
-    ("Gumroad", "linkagedesign.gumroad.com/l/markingmenus"),
-    ("Instagram", "instagram.com/LinkageDesign"),
-    ("YouTube", "youtube.com/c/LinkageDesign")
-]
-
 #   Default object mode operators
 OBJECT_OPERATORS = [
     ("object.select_all(action='TOGGLE')", "Select All (Toggle)", "Toggle selection of all objects"),
@@ -125,7 +115,6 @@ defaults = {
 
 #   Define a place to store and process our keymaps and icon collection.
 addon_keymaps = []
-icon_collection = utils.loadIcons()
 
 ###############################################################################
 #
@@ -229,22 +218,12 @@ class MarkingMenusPreferences(bpy.types.AddonPreferences):
                         op = sub_row.operator("pie.search_operator", text="", icon='VIEWZOOM')
                         op.target_property = custom_name
 
-        #   Create a new label for the website buttons
-        parentLayt.label(text = "Links to Websites")
+        #   Add a separator line in the ui
+        parentLayt.separator(type = "LINE")
 
-        #   Create buttons for each url in the URL_LIST
-        for i in range(0, len(URL_LIST), 2):
-            rowLayt = parentLayt.row()
-            for col in (0, 1):
-                try:
-                    #   Get the site and url values from URL_LIST
-                    name, url = URL_LIST[i + col]
-                    iconId = name.replace(' ', '')
+        #   Create rowLayout for our buttons
+        rowLayt = parentLayt.row()
 
-                    #   Create the button
-                    op = rowLayt.operator("wm.url_open", text = name,
-                                icon_value = icon_collection[iconId].icon_id)
-                    op.url = f"https://{url}"
-
-                except IndexError as e:
-                    break
+        #   Create the button for the user to report an issue or request a feature
+        op = rowLayt.operator("wm.url_open", text = "Report Issues / Request Feature", icon = "URL")
+        op.url = "https://www.github.com/Linkage-Design/MarkingMenu/issues"

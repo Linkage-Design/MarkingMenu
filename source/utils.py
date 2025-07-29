@@ -25,8 +25,6 @@
 #
 ################################################################################
 import bpy
-import bpy.utils.previews
-import pathlib
 
 ###############################################################################
 #
@@ -55,30 +53,3 @@ def get_all_operators(self, context):
 
      # Sort by label, case-insensitive
     return sorted(items, key=lambda x: x[1].lower())
-
-def loadIcons():
-    '''
-    DEFINITION
-        This method is used to load and store icons that are defined by this
-        add-on. The data is stored in the prefs dictionary icon_collection
-
-    ARGUMENTS
-        None
-
-    RETURN
-        A dictionary with all loaded icon data
-    '''
-    iconPath = pathlib.Path(__file__).parent
-    iconPath = iconPath.joinpath("icons")
-    iconColl = bpy.utils.previews.new()
-
-    #   Load the icons from the icon directory
-    for icon in iconPath.iterdir():
-        if not icon.name.endswith('.png'):
-            continue
-        name = icon.stem.replace('_', '')
-        path = str(icon)
-        iconColl.load(name, path, 'IMAGE')
-
-    #   Store the icon pack in the preferences
-    return(iconColl)
