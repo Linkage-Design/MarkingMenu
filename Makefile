@@ -80,7 +80,7 @@ BRANCH  		= $(if $(filter 0,$(words $(shell ls -A .git))),				\
 VERSION 		= $(strip 														\
 				      $(if $(filter main,$(BRANCH)),							\
  					      $(shell git describe --tags --abbrev=0),				\
-			  		      v0.0.0												\
+			  		      v0.0.0 												\
 					  )															\
                   )
 
@@ -90,13 +90,11 @@ PACKAGE_FILE    = $(PACKAGE_NAME)-$(VERSION).zip
 
 #  Define the Locations of the Source, Build, and Distribution Files
 SOURCE_LOCATION = source
-ICON_LOCATION   = icons
 BUILD_LOCATION  = build
 DIST_LOCATION   = dist
 
 BUILD_FILES		= $(shell ls -Ar $(BUILD_LOCATION))
 SOURCE_FILES    = $(wildcard $(SOURCE_LOCATION)/*)
-ICON_FILES	    = $(wildcard $(ICON_LOCATION)/*)
 
 #  Define the VPATH
 VPATH           = $(BUILD_LOCATION) $(SOURCE_LOCATION) $(DIST_LOCATION)
@@ -108,25 +106,23 @@ VPATH           = $(BUILD_LOCATION) $(SOURCE_LOCATION) $(DIST_LOCATION)
 #
 ################################################################################
 BLANK 	= printf '\n'
-CHKDIR 	= $(call INFO,"Checking Folder",$(1))			 						\
-		  if ! test -d $(1); then 												\
+CHKDIR 	= if ! test -d $(1); then 												\
+		   	  $(call INFO,"Checking Folder",$(1))			 					\
 			  mkdir -p $(1); 													\
 		  fi
 COPY 	= if test -f $(1); then 												\
 			  $(call INFO,"Copying File",$(1))									\
 			  cp -r $(1) $(2);													\
 		  fi
-DELETE  = if test -e $(1); then                                         		\
-			  $(call INFO,"Deleting File",$(1))   					        	\
-			  rm -fr $(1);                                              		\
-		  fi
-EDGE    = $(if $(filter 0,$(words $(1))),										\
-			   printf "\e[36;1m%0.s*\e[0m" {0..80};	printf "\n";,				\
-			   printf "\e[36;1m*\e[33m%19s\e[37m %s\e[0m\n" $(1) $(2);			\
-		   )
+DELETE  = printf "\e[31m%15s\e[0m %s\n" Removing $(1);	                		\
+		  rm -fr "$(1)";
 ERROR	= printf "\e[31m%20s\e[0m %s\n" $(1) $(2);
 INFO 	= printf "\e[33m%20s\e[0m %s\n" $(1) $(2);
 LABEL   = printf "\e[35m%s\e[0m\n" $(1);
+LINE    = $(if $(filter 0,$(words $(1))),										\
+			  printf "\e[36;1m*%0.s\e[0m" `seq 0 80`; printf "\n";,				\
+			  printf "\e[36;1m*\e[33m%14s\e[37m %s\e[0m\n" $(1) $(2);			\
+		  )
 LIST    = printf "\e[33m%20s\e[0m" $(1);										\
 		  $(foreach ITEM, $(2), 												\
 			  printf " %s\n%20s" $(ITEM);										\
@@ -163,12 +159,7 @@ BLENDER_MANIFEST = $(call INFO,"Creating Manifest",$(1))						\
 				   printf 'license = $(BL_LICENSE)\n' >> $(1);					\
 				   printf 'website = $(BL_WEBSITE)\n' >> $(1);					\
 				   printf 'copyright = $(BL_COPYRIGHT)\n' >> $(1);
-BLENDER_REMOVE   = $(if $(filter 1,$(shell 										\
-						blender --command extension list | grep -c $(1))),		\
-						$(call INFO,"Removing Add-On",$(1))						\
-						blender --command extension remove $(1),				\
-						$(call ERROR,$(1),"Is Not Installed")					\
-					)
+BLENDER_REMOVE   = blender --command extension remove $(1);
 BLENDER_VALIDATE = blender --command extension validate $(1);
 
 
@@ -213,13 +204,13 @@ check: BANNER
 clean: BANNER
 	@$(call LABEL,"Cleaning $(PROJECT)")
 	@$(foreach ITEM, $(shell ls -A $(BUILD_LOCATION)),							\
-		$(call DELETE,$(BUILD_LOCATION)/$(ITEM));								)
+		$(call DELETE,$(BUILD_LOCATION)/$(ITEM))								)
 	@$(call BLANK)
 
 clobber: BANNER
 	@$(call LABEL,"Clobber $(PROJECT)")
 	@$(foreach ITEM, $(shell ls -A $(BUILD_LOCATION)),							\
-		$(call DELETE,$(BUILD_LOCATION)/$(ITEM));				 				\
+		$(call DELETE,$(BUILD_LOCATION)/$(ITEM))				 				\
 	)
 	@$(call DELETE,$(BUILD_LOCATION)/$(ICON_LOCATION))
 	@$(call DELETE,$(DIST_LOCATION)/$(PACKAGE_FILE))
@@ -260,25 +251,23 @@ test: BANNER clean default dist check inst
 #
 ################################################################################
 BANNER:
-	@$(call EDGE)
-	@$(call EDGE,"")
-	@$(call EDGE,Project,$(PROJECT))
-	@$(call EDGE,Platform,$(PLATFORM))
-	@$(call EDGE,"")
-	@$(call EDGE,Target,$(TARGET))
-	@$(call EDGE,"")
-	@$(call EDGE,Branch,$(BRANCH))
-	@$(call EDGE,Version,$(VERSION))
-	@$(call EDGE,"Package File",$(PACKAGE_FILE))
-	@$(call EDGE,"")
-	@$(call EDGE,Date,"$(DATE)")
-	@$(call EDGE,Time,"$(TIME)")
-	@$(call EDGE,"")
-	@$(call EDGE)
+	@$(call LINE)
+	@$(call LINE,"")
+	@$(call LINE,Project,$(PROJECT))
+	@$(call LINE,Platform,$(PLATFORM))
+	@$(call LINE,"")
+	@$(call LINE,Target,$(TARGET))
+	@$(call LINE,"")
+	@$(call LINE,Branch,$(BRANCH))
+	@$(call LINE,Version,$(VERSION))
+	@$(call LINE,"")
+	@$(call LINE,Date,"$(DATE)")
+	@$(call LINE,Time,"$(TIME)")
+	@$(call LINE,"")
+	@$(call LINE)
 
-BLENDER_INFO:
+BLENDER_MANIFEST:
 	@$(call LABEL,"Blender Manifest Data")
-	@$(call BLANK)
 	@$(call INFO,BLENDER_VERSION,$(BLENDER_VERSION))
 	@$(call INFO,BL_MANIFEST_FILE,$(BL_MANIFEST_FILE))
 	@$(call INFO,BL_SCHEMA_VERSION,$(BL_SCHEMA_VERSION))
@@ -293,23 +282,18 @@ BLENDER_INFO:
 	@$(call INFO,BL_LICENSE,$(BL_LICENSE))
 	@$(call INFO,BL_WEBSITE,$(BL_WEBSITE))
 	@$(call INFO,BL_COPYRIGHT,$(BL_COPYRIGHT))
-	@$(call BLANK)
-	@$(call LABEL,"Blender Repo List")
-	@$(call BLANK)
-	@blender --command extension repo-list
-	@$(call BLANK)
+	@$(call INFO,"")
 
-info: BANNER
+info: BANNER BLENDER_MANIFEST
+	@$(call LABEL,"Basic Build Data")
 	@$(call LIST,SOURCE_LOCATION,$(SOURCE_LOCATION))
 	@$(call LIST,BUILD_LOCATION,$(BUILD_LOCATION))
 	@$(call LIST,DIST_LOCATION,$(DIST_LOCATION))
-	@$(call BLANK)
+	@$(call INFO,"")
+	@$(call INFO,PACKAGE_NAME,$(PACKAGE_NAME))
+	@$(call INFO,PACKAGE_FILE,$(PACKAGE_FILE))
+	@$(call INFO,"")
 	@$(call LIST,"SOURCE_FILES",$(SOURCE_FILES))
-	@$(call BLANK)
-	@$(call LIST,"ICON_FILES",$(ICON_FILES))
-	@$(call BLANK)
-	@$(call LIST,"BUILD_FILES",$(BUILD_FILES))
-	@$(call BLANK)
+	@$(call INFO,"")
 	@$(call LIST,"VPATH",$(VPATH))
-	@$(call BLANK)
-	@MAKE BLENDER_INFO
+	@$(call INFO,"")
