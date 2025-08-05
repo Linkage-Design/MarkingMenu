@@ -31,7 +31,7 @@ from   . import utils
 
 ###############################################################################
 #
-#   Define Default values for this module here
+#   Define Default values for this Extension here
 #
 ###############################################################################
 
@@ -90,7 +90,7 @@ defaults = {
                 "object.convert(target='MESH')",
                 "object.origin_set(type='ORIGIN_GEOMETRY')",
                 "wm.call_menu(name='VIEW3D_MT_object_apply')"
-            ],
+               ],
     "object2": [
                 "object.select_all(action='TOGGLE')",
                 "object.delete",
@@ -100,7 +100,7 @@ defaults = {
                 "object.convert(target='MESH')",
                 "object.origin_set(type='ORIGIN_GEOMETRY')",
                 "wm.call_menu(name='VIEW3D_MT_object_apply')"
-            ],
+               ],
     "edit":    [
                 "mesh.select_all(action='TOGGLE')",
                 "mesh.delete",
@@ -113,15 +113,13 @@ defaults = {
             ]
 }
 
-#   Define a place to store and process our keymaps and icon collection.
-addon_keymaps = []
 
 ###############################################################################
 #
 #   Marking Menus Addon Preferences Class
 #
 ###############################################################################
-class MarkingMenusPreferences(bpy.types.AddonPreferences):
+class MarkingMenu(bpy.types.AddonPreferences):
     bl_idname = __package__
 
     #   Define the properties for the pie menu items
@@ -221,9 +219,7 @@ class MarkingMenusPreferences(bpy.types.AddonPreferences):
         #   Add a separator line in the ui
         parentLayt.separator(type = "LINE")
 
-        #   Create rowLayout for our buttons
+        #   Create rowLayout for our button
         rowLayt = parentLayt.row()
-
-        #   Create the button for the user to report an issue or request a feature
         op = rowLayt.operator("wm.url_open", text = "Report Issues / Request Feature", icon = "URL")
         op.url = "https://www.github.com/Linkage-Design/MarkingMenu/issues"

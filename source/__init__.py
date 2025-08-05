@@ -35,10 +35,27 @@ from    . import utils
 
 ###############################################################################
 #
-#   Classes for PIE menus and operators
+#   Classes for MarkingMenu Extension
 #
 ###############################################################################
 class PIE_MT_CustomizableSelectionsBase(bpy.types.Menu):
+    '''
+    DESCRIPTION
+        Blender Pie menus are populated in the following order.
+
+            Compass         Numpad
+            Position        Hotkey
+            ---------       ------
+              West            4
+              East            6
+              South           2
+              North           8
+            NorthWest         7
+            NorthEast         9
+            SouthWest         1
+            SouthEast         3
+
+    '''
     PIE_POSITIONS = [6, 2, 4, 0, 7, 1, 5, 3]
 
     def draw(self, context):
@@ -267,13 +284,14 @@ class PIE_OT_SearchOperator(bpy.types.Operator):
 #   Define a list of classes to register with Blender Add-On system
 #
 ###############################################################################
+addon_keymaps = []
 classes = ( PIE_MT_CustomizableSelectionsObject,
             PIE_MT_CustomizableSelectionsObject2,
             PIE_MT_CustomizableSelectionsEdit,
             PIE_OT_CallCustomizablePieMenu,
             PIE_OT_CallCustomizablePieMenu2,
             PIE_OT_SearchOperator,
-            prefs.MarkingMenusPreferences )
+            prefs.MarkingMenu )
 
 
 ###############################################################################
@@ -299,21 +317,26 @@ def register():
 
     #   Register shortcuts for object mode pie menus
     wm  = bpy.context.window_manager
-    km  = wm.keyconfigs.addon.keymaps.new(name = 'Object Mode')
-    kmi = km.keymap_items.new('pie.call_customizable_pie_menu', 'LEFTMOUSE', 'PRESS', shift=True, ctrl=True)
-    kmi = km.keymap_items.new('pie.call_customizable_pie_menu_2', 'RIGHTMOUSE', 'PRESS', shift=True, ctrl=True)
-    prefs.addon_keymaps.append((km, kmi))
+    kc  = wm.keyconfigs.addon
+    if kc:
+        #   Register keymap shortcuts for object mode pie menus
+        km  = wm.keyconfigs.addon.keymaps.new(name = 'Object Mode')
+        kmi = km.keymap_items.new('pie.call_customizable_pie_menu', 'LEFTMOUSE', 'PRESS', shift=True, ctrl=True)
+        addon_keymaps.append((km, kmi))
 
-    #   Register keyboard shortcuts for edit mode pie menus
-    km  = wm.keyconfigs.addon.keymaps.new(name='Mesh')
-    kmi = km.keymap_items.new('pie.call_customizable_pie_menu', 'LEFTMOUSE', 'PRESS', shift=True, ctrl=True)
-    prefs.addon_keymaps.append((km, kmi))
+        kmi = km.keymap_items.new('pie.call_customizable_pie_menu_2', 'RIGHTMOUSE', 'PRESS', shift=True, ctrl=True)
+        addon_keymaps.append((km, kmi))
+
+        #   Register keyboard shortcuts for edit mode pie menus
+        km  = wm.keyconfigs.addon.keymaps.new(name='Mesh')
+        kmi = km.keymap_items.new('pie.call_customizable_pie_menu', 'LEFTMOUSE', 'PRESS', shift=True, ctrl=True)
+        addon_keymaps.append((km, kmi))
 
 def unregister():
     '''
     DESCRIPTION
         This method is used by Blender to unregister the classes we
-        registered in this Add-On's register method.
+        registered in this Extension's register method.
 
     ARGUMENTS
         None
@@ -329,9 +352,9 @@ def unregister():
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
     if kc:
-        for km, kmi in prefs.addon_keymaps:
+        for km, kmi in addon_keymaps:
             km.keymap_items.remove(kmi)
-    prefs.addon_keymaps.clear()
+    addon_keymaps.clear()
 
 ###############################################################################
 #

@@ -78,12 +78,14 @@ BRANCH  		= $(if $(filter 0,$(words $(shell ls -A .git))),				\
 			   		  $(shell git branch --show-current)						\
                   )
 VERSION 		= $(strip 														\
-				      $(if $(filter main,$(BRANCH)),							\
- 					      $(shell git describe --tags --abbrev=0),				\
-			  		      v0.0.0 												\
-					  )															\
-                  )
-
+					  $(if $(filter test,$(TARGET)),							\
+					  	  v0.0.1,												\
+						  $(if $(filter main,$(BRANCH)),						\
+ 					      	  $(shell git describe --tags --abbrev=0),			\
+			  		      	  v0.0.0 											\
+						  	)													\
+    	              	)														\
+				    )
 #	Define the Package Name and File
 PACKAGE_NAME	= $(firstword $(COMPANY))$(PROJECT)
 PACKAGE_FILE    = $(PACKAGE_NAME)-$(VERSION).zip
@@ -136,7 +138,6 @@ LIST    = printf "\e[33m%20s\e[0m" $(1);										\
 #
 ################################################################################
 BLENDER_BUILD	 = blender --command extension build							\
-				       --verbose  												\
 				       --source-dir $(BUILD_LOCATION) 							\
 				       --output-filepath $(1);
 BLENDER_INSTALL  = if test -e $(1); then 										\
@@ -190,7 +191,7 @@ dist: BANNER
 	@$(call BLENDER_BUILD,$(DIST_LOCATION)/$(PACKAGE_FILE))
 	@$(call BLANK)
 
-check: BANNER
+validate: BANNER
 	@$(call LABEL,"Validating $(PACKAGE_FILE)")
 	@$(call BLENDER_VALIDATE,$(DIST_LOCATION)/$(PACKAGE_FILE))
 	@$(call BLANK)
@@ -239,7 +240,7 @@ uninst: BANNER
 #  	Test Targets
 #
 ################################################################################
-test: BANNER clean default dist check inst
+test: BANNER clean default dist validate inst
 	@$(call LABEL,"Launching Blender...")
 	@blender
 	@$(call BLANK)
