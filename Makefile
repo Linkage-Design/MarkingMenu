@@ -28,7 +28,7 @@
 PROJECT				= $(notdir $(shell pwd))
 COMPANY				= Linkage Design
 CONTACT				= acheck@linkage-d.com
-LICENSE_FILE		= LICENSE
+LICENSE_FILE		= LICENSE.md
 
 #	Blender Manifest Definitions
 BLENDER_VERSION     = 4.3
@@ -68,10 +68,6 @@ BL_COPYRIGHT		= ["2024 $(COMPANY)"]
 TARGET			= $(strip $(if $(MAKECMDGOALS), $(MAKECMDGOALS), default))
 PLATFORM 		= $(shell uname)
 
-#  	Get the Date and Time
-DATE			= $(shell date "+%Y-%m-%d")
-TIME			= $(shell date "+%H:%M:%S")
-
 #  Detirmine the Branch and Version of this Project
 BRANCH  		= $(if $(filter 0,$(words $(shell ls -A .git))),				\
 			 	      "NONE",													\
@@ -79,7 +75,7 @@ BRANCH  		= $(if $(filter 0,$(words $(shell ls -A .git))),				\
                   )
 VERSION 		= $(strip 														\
 					  $(if $(filter test,$(TARGET)),							\
-					  	  v0.0.1,												\
+					  	  v0.0.0,												\
 						  $(if $(filter main,$(BRANCH)),						\
  					      	  $(shell git describe --tags --abbrev=0),			\
 			  		      	  v0.0.0 											\
@@ -95,7 +91,6 @@ SOURCE_LOCATION = source
 BUILD_LOCATION  = build
 DIST_LOCATION   = dist
 
-BUILD_FILES		= $(shell ls -Ar $(BUILD_LOCATION))
 SOURCE_FILES    = $(wildcard $(SOURCE_LOCATION)/*)
 
 #  Define the VPATH
