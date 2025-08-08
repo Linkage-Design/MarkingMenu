@@ -257,8 +257,8 @@ BANNER:
 	@$(call LINE,Branch,$(BRANCH))
 	@$(call LINE,Version,$(VERSION))
 	@$(call LINE,"")
-	@$(call LINE,Date,"$(DATE)")
-	@$(call LINE,Time,"$(TIME)")
+	@$(call LINE,Date,$(shell date "+%Y-%m-%d"))
+	@$(call LINE,Time,$(shell date "+%H:%M:%S"))
 	@$(call LINE,"")
 	@$(call LINE)
 
